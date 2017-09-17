@@ -1,0 +1,87 @@
+<head>
+    <script>
+        
+        function validate(){
+            msg.textContent = ""
+            event.returnValue = true;
+            if (document.getElementById("myloc").value == ""){
+                msg.textContent += "You need a starting location. ";
+                event.returnValue = false;
+            }
+            if (document.getElementById("myterm").value == "" && document.getElementById("myreg").value == ""){
+                msg.textContent += "You need a search term or regular expression. ";
+                event.returnValue = false;
+            }
+            var reggie = /^[0-9]{1,4}$/;
+            var mymaxval = document.getElementById("mymax").value;
+            var mymaxvalerrmsg = "Max found files must be number from 1 to 9999. ";
+            if (mymaxval == "" || !reggie.test(mymaxval) ){
+                msg.textContent += mymaxvalerrmsg;
+                event.returnValue = false;
+            }
+            else {
+                if (mymaxval =="0"){
+                    msg.textContent += mymaxvalerrmsg;
+                    event.returnValue = false;
+                }
+            }
+            return event.returnValue
+        }
+    </script>    
+</head>
+<h1>{{.Title}}</h1>
+<div><pre>{{.Greeting}}</pre></div>
+<style>
+    label{
+        text-align:right;
+    }
+    input {
+        display:inline-block;
+        margin-left:4px
+    }
+</style>
+<form id="myform" action="/search" method="POST" onsubmit="event.preventDefault(); validate();">
+    <div>
+        <label for="myloc">Starting Folder:</label>
+        <input type="text" id="myloc" name="myloc"/>
+    </div>
+    <br/>
+    <div>
+        <label for="mytypes">File Types (e.g. txt,doc.) Default is txt:</label>
+        <input type="text" id="mytypes" name="mytypes"/>
+    </div>
+    <br/>
+    <div>
+        <label for="myterm">Search For:</label>
+        <input type="text" id="myterm" name="myterm"/>
+    </div>
+    <br/>
+    <div>
+        <label for="mycase">Case sensitive:</label>
+        <input type="checkbox" id="mycase" name="mycase"/>
+    </div>
+    <br/>
+    <div>
+        <label for="mylog">Log file (optional):</label>
+        <input type="text" id="mylog" name="mylog"/>
+    <div>
+    <br/>
+    <div>
+        <label for="myreg">Regular expression (supercedes search term):</label>
+        <input type="text" id="myreg" name="myreg"/>
+    <div>
+    <br/>
+    <div>
+        <label for="mymax">Max found files limit. Default is 250:</label>
+        <input type="text" id="mymax" name="mymax"/>
+    <div>
+    <br/>
+    <div>
+        <input type="submit" value="Submit" style="position:absolute;left:10px">
+    </div>
+    <br/>
+    <br/>
+    <div>
+        <label id="msg" style="color:red;position:absolute;left:10px" />
+    </div>
+</form>
