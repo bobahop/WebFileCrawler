@@ -14,8 +14,8 @@
             }
             var reggie = /^[0-9]{1,4}$/;
             var mymaxval = document.getElementById("mymax").value;
-            var mymaxvalerrmsg = "Max found files must be number from 1 to 9999. ";
-            if (mymaxval == "" || !reggie.test(mymaxval) ){
+            var mymaxvalerrmsg = "Max found files must be blank or a number from 1 to 9999. ";
+            if (mymaxval != "" && !reggie.test(mymaxval) ){
                 msg.textContent += mymaxvalerrmsg;
                 event.returnValue = false;
             }

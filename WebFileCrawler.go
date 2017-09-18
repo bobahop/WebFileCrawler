@@ -69,8 +69,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 	var extensions []string
 	var regexpterm string
 	var maxval string
-	err = r.ParseForm()
-	if err != nil {
+	if err = r.ParseForm(); err != nil {
 		foundfiles = err.Error()
 		mytitle = "Error parsing request form"
 		goto loadpage
@@ -81,8 +80,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 	root = r.Form.Get("myloc")
 	maxval = r.Form.Get("mymax")
 	if maxval != "" {
-		foundlimit, err = strconv.Atoi(maxval)
-		if err != nil {
+		if foundlimit, err = strconv.Atoi(maxval); err != nil {
 			foundfiles = err.Error()
 			mytitle = "Error parsing max files found limit"
 			goto loadpage
@@ -95,8 +93,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 	}
 
 	if regexpterm != "" {
-		reg, err = regexp.Compile(regexpterm)
-		if err != nil {
+		if reg, err = regexp.Compile(regexpterm); err != nil {
 			foundfiles = err.Error()
 			mytitle = "Error compiling search term"
 			goto loadpage
@@ -107,8 +104,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 		if caseflag == "on" {
 			caseterm = ""
 		}
-		reg, err = regexp.Compile(caseterm + searchterm)
-		if err != nil {
+		if reg, err = regexp.Compile(caseterm + searchterm); err != nil {
 			foundfiles = err.Error()
 			mytitle = "Error compiling search term"
 			goto loadpage
@@ -120,15 +116,14 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 		echoback[i] = "!"
 	}
 
-	searchfunc, err = search.Factory(extensions, reg, logname, foundlimit, &foundcount, echoback)
-	if err != nil {
+	if searchfunc, err = search.Factory(extensions, reg, logname, foundlimit,
+		&foundcount, echoback); err != nil {
 		foundfiles = err.Error()
 		mytitle = "Error creating search function"
 		goto loadpage
 	}
 
-	err = filepath.Walk(root, searchfunc)
-	if err != nil {
+	if err = filepath.Walk(root, searchfunc); err != nil {
 		foundfiles = err.Error()
 		mytitle = "Error walking filepath"
 		goto loadpage
@@ -142,8 +137,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 	}
 
 loadpage:
-	p, err := loadSearchPage("search", mytitle, searchterm, foundfiles, foundcount, root)
-	if err != nil {
+	var p *Page
+	if p, err = loadSearchPage("search", mytitle, searchterm, foundfiles, foundcount, root); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	renderTemplate(w, "search", p, templates)
@@ -174,8 +169,7 @@ func main() {
 	http.HandleFunc("/", makeHandler(startHandler, validPath, templates))
 	http.HandleFunc("/search", makeHandler(searchHandler, validPath, templates))
 	cmd := exec.Command("rundll32", "url.dll,FileProtocolHandler", fmt.Sprintf("http://localhost:%v/", port))
-	err := cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		fmt.Println(fmt.Sprintf("Problem launching default browser: %v", err.Error()))
 		os.Exit(1)
 	}
