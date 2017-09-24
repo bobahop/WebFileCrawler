@@ -15,40 +15,128 @@ import (
 )
 
 //Page holds Title and Greeting
-type Page struct {
-	Title      string
-	Greeting   string
-	Body       string
-	SearchTerm string
-	FoundCount int
-	StartLoc   string
-}
+// type Page struct {
+// 	Title      string
+// 	Greeting   string
+// 	Body       string
+// 	SearchTerm string
+// 	FoundCount int
+// 	StartLoc   string
+// }
 
-func loadStartPage(pageName string, title string) (*Page, error) {
-	greeting := "Welcome to the Web version of FileCrawler! Search the contents of files for your search term or regular expression..."
-	return &Page{Title: title, Greeting: greeting}, nil
-}
+// func loadStartPage(pageName string, title string) (*Page, error) {
+// 	greeting := "Welcome to the Web version of FileCrawler! Search the contents of files for your search term or regular expression..."
+// 	return &Page{Title: title, Greeting: greeting}, nil
+// }
 
-func loadSearchPage(pageName string, title string, term string, body string, foundcount int, startloc string) (*Page, error) {
-	greeting := "The results are in!"
-	return &Page{Title: title, Greeting: greeting, SearchTerm: term, Body: body,
-		FoundCount: foundcount, StartLoc: startloc}, nil
-}
+// func loadSearchPage(pageName string, title string, term string, body string, foundcount int, startloc string) (*Page, error) {
+// 	greeting := "The results are in!"
+// 	return &Page{Title: title, Greeting: greeting, SearchTerm: term, Body: body,
+// 		FoundCount: foundcount, StartLoc: startloc}, nil
+// }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, p *Page, templates *template.Template) {
-	err := templates.ExecuteTemplate(w, tmpl+".html", p)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
+// func renderTemplate(w http.ResponseWriter, tmpl string, p *Page, templates *template.Template) {
+// 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 	}
+// }
 
 func startHandler(w http.ResponseWriter, r *http.Request, templates *template.Template) {
-	p, err := loadStartPage("start", "WebFileCrawler")
-	if err != nil {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-	renderTemplate(w, "start", p, templates)
+	// p, err := loadStartPage("start", "WebFileCrawler")
+	// if err != nil {
+	// 	http.Redirect(w, r, "/", http.StatusFound)
+	// 	return
+	// }
+	// renderTemplate(w, "start", p, templates)
+	body := `<head>
+    <script>
+        
+        function validate(){
+            msg.textContent = ""
+            event.returnValue = true;
+            if (document.getElementById("myloc").value == ""){
+                msg.textContent += "You need a starting location. ";
+                event.returnValue = false;
+            }
+            if (document.getElementById("myterm").value == "" && document.getElementById("myreg").value == ""){
+                msg.textContent += "You need a search term or regular expression. ";
+                event.returnValue = false;
+            }
+            var reggie = /^[0-9]{1,4}$/;
+            var mymaxval = document.getElementById("mymax").value;
+            var mymaxvalerrmsg = "Max found files must be blank or a number from 1 to 9999. ";
+            if (mymaxval != "" && !reggie.test(mymaxval) ){
+                msg.textContent += mymaxvalerrmsg;
+                event.returnValue = false;
+            }
+            else {
+                if (mymaxval =="0"){
+                    msg.textContent += mymaxvalerrmsg;
+                    event.returnValue = false;
+                }
+            }
+            return event.returnValue
+        }
+    </script>    
+</head>
+<h1>start</h1>
+<div><pre>Welcome to the Web version of FileCrawler! Search the contents of files for your search term or regular expression...</pre></div>
+<style>
+    label{
+        text-align:right;
+    }
+    input {
+        display:inline-block;
+        margin-left:4px
+    }
+</style>
+<form id="myform" action="/search" method="POST" onsubmit="event.preventDefault(); validate();">
+    <div>
+        <label for="myloc">Starting Folder:</label>
+        <input type="text" id="myloc" name="myloc"/>
+    </div>
+    <br/>
+    <div>
+        <label for="mytypes">File Types (e.g. txt,doc.) Default is txt:</label>
+        <input type="text" id="mytypes" name="mytypes"/>
+    </div>
+    <br/>
+    <div>
+        <label for="myterm">Search For:</label>
+        <input type="text" id="myterm" name="myterm"/>
+    </div>
+    <br/>
+    <div>
+        <label for="mycase">Case sensitive:</label>
+        <input type="checkbox" id="mycase" name="mycase"/>
+    </div>
+    <br/>
+    <div>
+        <label for="mylog">Log file (optional):</label>
+        <input type="text" id="mylog" name="mylog"/>
+    <div>
+    <br/>
+    <div>
+        <label for="myreg">Regular expression (supercedes search term):</label>
+        <input type="text" id="myreg" name="myreg"/>
+    <div>
+    <br/>
+    <div>
+        <label for="mymax">Max found files limit. Default is 250:</label>
+        <input type="text" id="mymax" name="mymax"/>
+    <div>
+    <br/>
+    <div>
+        <input type="submit" value="Submit" style="position:absolute;left:10px">
+    </div>
+    <br/>
+    <br/>
+    <div>
+        <label id="msg" style="color:red;position:absolute;left:10px" />
+    </div>
+</form>`
+	w.Write([]byte(body))
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.Template) {
@@ -137,11 +225,21 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 	}
 
 loadpage:
-	var p *Page
-	if p, err = loadSearchPage("search", mytitle, searchterm, foundfiles, foundcount, root); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	renderTemplate(w, "search", p, templates)
+	// var p *Page
+	// if p, err = loadSearchPage("search", mytitle, searchterm, foundfiles, foundcount, root); err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// }
+	// renderTemplate(w, "search", p, templates)
+	body := `<h1>` + mytitle + `</h1>
+	
+	<div><pre>The results are in!` + strconv.Itoa(foundcount) + ` file(s) matched your search for "` + searchterm + `" in ` + root + `.</pre></div>
+	
+	<body>
+		<div><pre>` +
+		foundfiles +
+		`</pre></div>
+	</body>`
+	w.Write([]byte(body))
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, *template.Template), validPath *regexp.Regexp,
