@@ -139,6 +139,19 @@ func startHandler(w http.ResponseWriter, r *http.Request, templates *template.Te
 	w.Write([]byte(body))
 }
 
+func writeSearchPageResponse(w http.ResponseWriter, mytitle string, foundcount int, searchterm string,
+	root string, foundfiles string) {
+	body := `<h1>` + mytitle + `</h1>
+	
+	<div><pre>The results are in! ` + strconv.Itoa(foundcount) + ` file(s) matched your search for "` + searchterm + `" in ` + root + `.</pre></div>
+	
+	<body>
+		<div><pre>` +
+		foundfiles +
+		`</pre></div>
+	</body>`
+	w.Write([]byte(body))
+}
 func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.Template) {
 	foundfiles := ""
 	foundcount := 0
@@ -160,7 +173,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 	if err = r.ParseForm(); err != nil {
 		foundfiles = err.Error()
 		mytitle = "Error parsing request form"
-		goto loadpage
+		writeSearchPageResponse(w, mytitle, foundcount, searchterm, root, foundfiles)
+		return
 	}
 
 	searchterm = r.Form.Get("myterm")
@@ -171,7 +185,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 		if foundlimit, err = strconv.Atoi(maxval); err != nil {
 			foundfiles = err.Error()
 			mytitle = "Error parsing max files found limit"
-			goto loadpage
+			writeSearchPageResponse(w, mytitle, foundcount, searchterm, root, foundfiles)
+			return
 		}
 	}
 
@@ -184,7 +199,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 		if reg, err = regexp.Compile(regexpterm); err != nil {
 			foundfiles = err.Error()
 			mytitle = "Error compiling search term"
-			goto loadpage
+			writeSearchPageResponse(w, mytitle, foundcount, searchterm, root, foundfiles)
+			return
 		}
 		searchterm = regexpterm
 	} else {
@@ -195,7 +211,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 		if reg, err = regexp.Compile(caseterm + searchterm); err != nil {
 			foundfiles = err.Error()
 			mytitle = "Error compiling search term"
-			goto loadpage
+			writeSearchPageResponse(w, mytitle, foundcount, searchterm, root, foundfiles)
+			return
 		}
 	}
 
@@ -208,13 +225,15 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 		&foundcount, echoback); err != nil {
 		foundfiles = err.Error()
 		mytitle = "Error creating search function"
-		goto loadpage
+		writeSearchPageResponse(w, mytitle, foundcount, searchterm, root, foundfiles)
+		return
 	}
 
 	if err = filepath.Walk(root, searchfunc); err != nil {
 		foundfiles = err.Error()
 		mytitle = "Error walking filepath"
-		goto loadpage
+		writeSearchPageResponse(w, mytitle, foundcount, searchterm, root, foundfiles)
+		return
 	}
 
 	for _, foundfile := range echoback {
@@ -224,22 +243,23 @@ func searchHandler(w http.ResponseWriter, r *http.Request, templates *template.T
 		foundfiles += fmt.Sprintf("%s%s", foundfile, "\n")
 	}
 
-loadpage:
+	writeSearchPageResponse(w, mytitle, foundcount, searchterm, root, foundfiles)
+
 	// var p *Page
 	// if p, err = loadSearchPage("search", mytitle, searchterm, foundfiles, foundcount, root); err != nil {
 	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
 	// }
 	// renderTemplate(w, "search", p, templates)
-	body := `<h1>` + mytitle + `</h1>
-	
-	<div><pre>The results are in!` + strconv.Itoa(foundcount) + ` file(s) matched your search for "` + searchterm + `" in ` + root + `.</pre></div>
-	
-	<body>
-		<div><pre>` +
-		foundfiles +
-		`</pre></div>
-	</body>`
-	w.Write([]byte(body))
+	// body := `<h1>` + mytitle + `</h1>
+
+	// <div><pre>The results are in!` + strconv.Itoa(foundcount) + ` file(s) matched your search for "` + searchterm + `" in ` + root + `.</pre></div>
+
+	// <body>
+	// 	<div><pre>` +
+	// 	foundfiles +
+	// 	`</pre></div>
+	// </body>`
+	// w.Write([]byte(body))
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, *template.Template), validPath *regexp.Regexp,
